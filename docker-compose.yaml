@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: yourusername
+      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_DB: yourdbname
+    ports:
+      - '5432:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: go-simple-blog
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: yourusername
+      DB_PASSWORD: yourpassword
+      DB_NAME: yourdbname
+    ports:
+      - '8080:8080'
+    command: ['./go-simple-blog']
+
+volumes:
+  db-data:
