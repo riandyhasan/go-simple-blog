@@ -10,7 +10,7 @@ on:
     types: [closed]
 
 env:
-  IMAGE_NAME: go-simple-blog
+  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/go-simple-blog
 
 jobs:
   dockerize-and-push:
