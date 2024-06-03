@@ -36,8 +36,13 @@ func main() {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
 
-	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbUser, dbPassword, dbName)
+	if dbPort == "" {
+		dbPort = "5432"
+	}
+
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPassword, dbName)
 
 	var db *sql.DB
 	var err error
