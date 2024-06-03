@@ -27,11 +27,10 @@ WORKDIR /app
 
 COPY --from=builder /app/go-simple-blog .
 COPY --from=builder /app/migration.sql .
-COPY --from=builder /app/blogs.html .
-COPY --from=builder /app/blog-detail.html .
-COPY --from=builder /app/login.html .
-COPY --from=builder /app/register.html .
-
+COPY --from=builder /app/blogs.html ./pages/blogs.html
+COPY --from=builder /app/blog-detail.html ./pages/blog-detail.html
+COPY --from=builder /app/login.html ./pages/login.html
+COPY --from=builder /app/register.html ./pages/register.html
 EXPOSE 8080
 
 ENTRYPOINT ["./go-simple-blog"]

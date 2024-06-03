@@ -121,22 +121,21 @@ func main() {
 	})
 
 	http.HandleFunc("/posts", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./blogs.html")
+		http.ServeFile(w, r, "./pages/blogs.html")
 	})
 
 	http.HandleFunc("/posts/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./blog-detail.html")
+		http.ServeFile(w, r, "./pages/blog-detail.html")
 	})
 
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./login.html")
+		http.ServeFile(w, r, "./pages/login.html")
 	})
 
 	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./register.html")
+		http.ServeFile(w, r, "./pages/register.html")
 	})
 
-	fmt.Println("Listening on : http://127.0.0.1:8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		fmt.Println(err)
 	}
