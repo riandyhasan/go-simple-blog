@@ -32,17 +32,8 @@ func migrateDb(db *sql.DB) error {
 }
 
 func main() {
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-
-	if dbPort == "" {
-		dbPort = "5432"
-	}
-
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPassword, dbName)
+	dbURL := os.Getenv("DB_URL")
+	connStr := fmt.Sprintf(dbURL)
 
 	var db *sql.DB
 	var err error
