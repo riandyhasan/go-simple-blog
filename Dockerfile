@@ -7,6 +7,10 @@ WORKDIR /app
 
 COPY . .
 COPY ./migration.sql ./migration.sql
+COPY ./pages/blogs.html ./blogs.html
+COPY ./pages/blog-detail.html ./blog-detail.html
+COPY ./pages/login.html ./login.html
+COPY ./pages/register.html ./register.html
 
 RUN go mod tidy
 
@@ -23,6 +27,10 @@ WORKDIR /app
 
 COPY --from=builder /app/go-simple-blog .
 COPY --from=builder /app/migration.sql .
+COPY --from=builder /app/blogs.html .
+COPY --from=builder /app/blog-detail.html .
+COPY --from=builder /app/login.html .
+COPY --from=builder /app/register.html .
 
 EXPOSE 8080
 

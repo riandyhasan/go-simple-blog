@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts by tag</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            margin-top: 20px;
+        }
+        .search-container {
+            margin: 20px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            max-width: 800px;
+        }
+        .search-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px 0 0 3px;
+            font-size: 16px;
+        }
+        .search-container button {
+            padding: 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 0 3px 3px 0;
+            font-size: 16px;
+        }
+        .blog-container {
+            max-width: 800px;
+            width: 100%;
+            margin: 20px;
+        }
+        .blog-post {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 10px 0;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: black;
+            cursor: pointer;
+        }
+        .blog-post a {
+            text-decoration: none !important;
+            width: 100%;
+        }
+        .blog-post p {
+            text-decoration: none !important;
+            color: black;
+        }
+        .blog-post h2 {
+            margin-top: 0;
+            display: inline-block;
+            text-decoration: none;
+            color: black;
+        }
+        .blog-post .status {
+            display: inline-block;
+            background-color: #007bff;
+            color: #fff;
+            padding: 2px 8px;
+            margin-left: 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        .blog-post .tags {
+            margin-top: 10px;
+        }
+        .tag {
+            display: inline-block;
+            background-color: #007bff;
+            color: #fff;
+            padding: 2px 8px;
+            margin: 0 5px 5px 0;
+            border-radius: 3px;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+        }
+        .pagination button {
+            margin: 0 5px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .pagination button:disabled {
+            background-color: #cccccc;
+        }
+        .pagination span {
+            margin: 0 10px;
+            align-self: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Blog Posts</h1>
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Search by tag" onkeypress="handleKeyPress(event)">
+        <button onclick="searchByTag()">Search</button>
+    </div>
+    <div class="blog-container" id="blog-container"></div>
+    <div class="pagination">
+        <button onclick="prevPage()">Previous</button>
+        <span id="page-info"></span>
+        <button onclick="nextPage()">Next</button>
+    </div>
+
+    <script>
+        const postsPerPage = 5;
+        let currentPage = 1;
+        let totalPosts = 0;
+        let tag = 'Tech';
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                searchByTag();
+            }
+        }
+
+        function searchByTag() {
+            const searchInput = document.getElementById('search-input').value;
+            tag = searchInput.trim() || 'Tech';
+            currentPage = 1;
+            renderPosts();
+        }
+
+        async function fetchPosts() {
+            try {
+                const token = window.localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = '/login';
+                    return;
+                }
+                const response = await fetch(`/api/posts?tag=${tag}&page=${currentPage}&limit=${postsPerPage}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                totalPosts = data.data.total;
+                return data.data.data;
+            } catch (error) {
+                console.error('Failed to fetch posts:', error);
+                return [];
+            }
+        }
+
+        async function renderPosts() {
+            try {
+                const blogPosts = await fetchPosts();
+                const blogContainer = document.getElementById("blog-container");
+                blogContainer.innerHTML = "";
+
+                console.log({ blogPosts });
+
+                blogPosts.forEach(post => {
+                    const postElement = document.createElement("div");
+                    postElement.classList.add("blog-post");
+                    postElement.innerHTML = `
+                        <a href="posts/${post.id}"><h2>${post.title}</h2>
+                        <span class="status">${post.status}</span>
+                        <p>${post.content}</p></a>`;
+                                                
+                    const tagsElement = document.createElement("div");
+                    tagsElement.classList.add("tags");
+                    post.tags.forEach(tag => {
+                        const tagElement = document.createElement("span");
+                        tagElement.classList.add("tag");
+                        tagElement.innerText = tag;
+                        tagsElement.appendChild(tagElement);
+                    });
+
+                    postElement.appendChild(tagsElement);
+                    blogContainer.appendChild(postElement);
+                });
+
+                document.getElementById("page-info").innerText = `Page ${currentPage} of ${Math.ceil(totalPosts / postsPerPage)}`;
+            } catch (e) {
+                console.error('Failed to render posts:', e);
+            }
+        }
+
+
+        function nextPage() {
+            if (currentPage * postsPerPage < totalPosts) {
+                currentPage++;
+                renderPosts();
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPosts();
+            }
+        }
+
+        renderPosts();
+    </script>
+</body>
+</html>

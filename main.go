@@ -68,12 +68,31 @@ func main() {
 	}
 
 	handlerDeps := NewHandlerDependencies(db)
+
+	http.HandleFunc("/api/auth/login", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			DefaultMiddleware(handlerDeps.Login)(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	http.HandleFunc("/api/auth/register", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			DefaultMiddleware(handlerDeps.Register)(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
 	http.HandleFunc("/api/posts", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
-			DefaultMiddleware(handlerDeps.CreatePostHandler)(w, r)
+			AuthMiddleware(handlerDeps.CreatePostHandler, []string{"user"})(w, r)
 		case http.MethodGet:
-			DefaultMiddleware(handlerDeps.SearchPostByTag)(w, r)
+			AuthMiddleware(handlerDeps.SearchPostByTag, []string{"user", "admin"})(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
@@ -82,23 +101,39 @@ func main() {
 	http.HandleFunc("/api/posts/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPut:
-			DefaultMiddleware(handlerDeps.UpdatePost)(w, r)
+			AuthMiddleware(handlerDeps.UpdatePost, []string{"user", "admin"})(w, r)
 		case http.MethodDelete:
-			DefaultMiddleware(handlerDeps.DeletePost)(w, r)
+			AuthMiddleware(handlerDeps.DeletePost, []string{"user", "admin"})(w, r)
 		case http.MethodGet:
-			DefaultMiddleware(handlerDeps.GetPost)(w, r)
+			AuthMiddleware(handlerDeps.GetPost, []string{"user", "admin"})(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
-	http.HandleFunc("/api/posts/publish", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/posts/publish/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPut:
-			DefaultMiddleware(handlerDeps.PublishPost)(w, r)
+			AuthMiddleware(handlerDeps.PublishPost, []string{"admin"})(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
+	})
+
+	http.HandleFunc("/posts", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./blogs.html")
+	})
+
+	http.HandleFunc("/posts/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./blog-detail.html")
+	})
+
+	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./login.html")
+	})
+
+	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./register.html")
 	})
 
 	fmt.Println("Listening on : http://127.0.0.1:8080")

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Post Detail</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 20px;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+        .blog-post h2 {
+            margin-top: 0;
+            display: inline-block;
+        }
+        .blog-post .status {
+            display: inline-block;
+            background-color: #007bff;
+            color: #fff;
+            padding: 2px 8px;
+            margin-left: 10px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .blog-post .tags {
+            margin-top: 10px;
+        }
+        .tag {
+            display: inline-block;
+            background-color: #007bff;
+            color: #fff;
+            padding: 2px 8px;
+            margin: 0 5px 5px 0;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .back-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="blog-detail"></div>
+    <button class="back-button" onclick="goBack()">Back to List</button>
+
+    <script>
+        async function fetchPostById(id) {
+            const token = window.localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            try {
+                const response = await fetch(`/api/posts/${id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                return data.data;
+            } catch (error) {
+                console.error('Failed to fetch post:', error);
+                return null;
+            }
+        }
+
+        async function renderPostDetail() {
+            const urlSegments = window.location.pathname.split('/');
+            const postId = urlSegments[urlSegments.length - 1];
+            const post = await fetchPostById(postId);
+
+            if (post) {
+                const blogDetail = document.getElementById("blog-detail");
+                blogDetail.innerHTML = `
+                    <div class="blog-post">
+                        <h2>${post.title}</h2>
+                        <span class="status">${post.status}</span>
+                        <p>${post.content}</p>
+                    </div>`;
+                
+                const tagsElement = document.createElement("div");
+                tagsElement.classList.add("tags");
+                post.tags.forEach(tag => {
+                    const tagElement = document.createElement("span");
+                    tagElement.classList.add("tag");
+                    tagElement.innerText = tag;
+                    tagsElement.appendChild(tagElement);
+                });
+
+                blogDetail.appendChild(tagsElement);
+            } else {
+                document.getElementById("blog-detail").innerHTML = "<p>Post not found.</p>";
+            }
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        renderPostDetail();
+    </script>
+</body>
+</html>

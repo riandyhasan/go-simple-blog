@@ -4,47 +4,49 @@ import (
 	"database/sql"
 	"encoding/json"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 // Entity
 type Post struct {
-	PostID      string       `db:"id" json:"id"`
-	Title       string       `db:"title" json:"title"`
-	Content     string       `db:"content" json:"content"`
-	Status      string       `db:"status" json:"status"`
-	PublishDate sql.NullTime `db:"publish_date" json:"-"`
-	Tags        []string     `db:"tags" json:"tags"`
+	PostID      string         `db:"id" json:"id"`
+	Title       string         `db:"title" json:"title"`
+	Content     string         `db:"content" json:"content"`
+	Status      string         `db:"status" json:"status"`
+	PublishDate sql.NullTime   `db:"publish_date" json:"-"`
+	Tags        pq.StringArray `db:"tags" json:"tags"`
 }
 
-// Special converter for time format
+type Account struct {
+	AccountID string `db:"id" json:"id"`
+	Username  string `db:"username" json:"username"`
+	Password  string `db:"password" json:"-"`
+	Name      string `db:"name" json:"name"`
+	Role      string `db:"role" json:"role"`
+}
+
 func (p Post) MarshalJSON() ([]byte, error) {
 	type Alias Post
 	return json.Marshal(&struct {
-		PublishDate time.Time `json:"publish_date"`
+		PublishDate *string `json:"publish_date"`
 		Alias
 	}{
-		PublishDate: p.PublishDate.Time,
-		Alias:       (Alias)(p),
+		PublishDate: func() *string {
+			if p.PublishDate.Valid {
+				s := p.PublishDate.Time.Format(time.RFC3339)
+				return &s
+			}
+			return nil
+		}(),
+		Alias: (Alias)(p),
 	})
 }
 
-func (p *Post) UnmarshalJSON(data []byte) error {
-	type Alias Post
-	aux := &struct {
-		PublishDate *time.Time `json:"publish_date"`
-		*Alias
-	}{
-		Alias: (*Alias)(p),
-	}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-	if aux.PublishDate != nil {
-		p.PublishDate = sql.NullTime{Time: *aux.PublishDate, Valid: true}
-	} else {
-		p.PublishDate = sql.NullTime{Valid: false}
-	}
-	return nil
+type CustomClaims struct {
+	AccountID string `json:"account_id"`
+	Role      string `json:"role"`
+	Exp       int64  `json:"exp"`
 }
 
 // DTO
@@ -59,4 +61,16 @@ type InsertOrUpdatePost struct {
 	Title   string   `json:"title"`
 	Content string   `json:"content"`
 	Tags    []string `json:"tags"`
+}
+
+type CreateAccount struct {
+	Username string `json:"username"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+}
+
+type LoginAccount struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
